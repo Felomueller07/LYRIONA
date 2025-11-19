@@ -1,5 +1,7 @@
 export interface CalendarHeaderProps {
     currentDate: Date;
-    onPrev: () => void;
-    onNext: () => void;
+    monthNames: string[];        // ← ADD THIS
+    onPreviousWeek: () => void;
+    onNextWeek: () => void;
+    onCreateEvent: () => void;
 }
