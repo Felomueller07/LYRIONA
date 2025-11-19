@@ -1,3 +1,4 @@
+// src/components/dashboard/outputs/CalendarSidebar.tsx
 import React from "react";
 import { ChevronLeft, ChevronRight, Calendar, Check } from "lucide-react";
 import GoogleCalendarSync from "./GoogleCalendarSync";
@@ -53,10 +54,10 @@ export default function CalendarSidebar({
           ))}
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
-            const isToday = 
+            const isToday =
               day === new Date().getDate() &&
               currentDate.getMonth() === new Date().getMonth();
-            
+
             return (
               <button
                 key={day}
@@ -75,7 +76,7 @@ export default function CalendarSidebar({
 
       {/* Kategorien */}
       <div className="bg-gradient-to-br from-[#2d2d2d] to-[#1a1a1a] rounded-3xl p-6 border border-[#D4AF37]/20 shadow-xl">
-        <button 
+        <button
           onClick={() => setShowAllCategories(!showAllCategories)}
           className="w-full text-left"
         >
@@ -90,16 +91,22 @@ export default function CalendarSidebar({
         <div className={`space-y-2 overflow-y-auto transition-all ${
           showAllCategories ? "max-h-96" : "max-h-48"
         }`}>
-          {categories.map(cat => (
-            <div key={cat.name} className="flex items-center gap-3 py-2">
-              <div
-                className="w-3 h-3 rounded-full shadow-lg flex-shrink-0"
-                style={{ backgroundColor: cat.color }}
-              />
-              <span className="text-xs text-[#C0C0C0] truncate">{cat.name}</span>
-              <Check size={12} className="ml-auto text-[#D4AF37] flex-shrink-0" />
-            </div>
-          ))}
+          {categories.map((cat) => {
+            const isString = typeof cat === "string";
+            const name = isString ? cat : cat.name;
+            const color = isString ? "#C0C0C0" : (cat.color ?? "#C0C0C0");
+
+            return (
+              <div key={name} className="flex items-center gap-3 py-2">
+                <div
+                  className="w-3 h-3 rounded-full shadow-lg flex-shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-xs text-[#C0C0C0] truncate">{name}</span>
+                <Check size={12} className="ml-auto text-[#D4AF37] flex-shrink-0" />
+              </div>
+            );
+          })}
         </div>
       </div>
 
