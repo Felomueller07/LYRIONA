@@ -99,8 +99,8 @@ export default function HomePage() {
       />
 
       {/* Navigation - Clean & Modern */}
-      <nav className="relative z-20 border-b border-white/8 bg-black/40 backdrop-blur-2xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <nav className="relative z-20 border-b border-white/10 bg-black/60 backdrop-blur-2xl sticky top-0">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 relative">
@@ -117,23 +117,26 @@ export default function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#home" className="text-[#C0C0C0] hover:text-white transition-colors text-sm font-medium">
+              <a href="#home" className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold">
                 Home
               </a>
-              <a href="#features" className="text-[#C0C0C0] hover:text-white transition-colors text-sm font-medium">
+              <a href="#features" className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold">
                 Features
               </a>
-              <a href="#about" className="text-[#C0C0C0] hover:text-white transition-colors text-sm font-medium">
+              <Link 
+                href="/about" 
+                className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold"
+              >
                 Über uns
-              </a>
-              <a href="#contact" className="text-[#C0C0C0] hover:text-white transition-colors text-sm font-medium">
+              </Link>
+              <a href="#contact" className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold">
                 Kontakt
               </a>
             </div>
 
             <button
               onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
-              className="px-6 py-2.5 bg-white hover:bg-[#E8E8E8] text-black font-semibold rounded-lg transition-all hover:scale-105 text-sm"
+              className="px-6 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FFD700] text-black font-bold rounded-xl transition-all hover:scale-105 text-base shadow-lg"
             >
               Anmelden
             </button>
