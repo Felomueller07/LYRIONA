@@ -8,6 +8,20 @@ import { ArrowLeft, Mail, Music, Code, Coffee, Zap } from "lucide-react";
 export default function AboutPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  // Generate particles ONCE to prevent hydration mismatch
+  const [particles] = useState(() => {
+    return [...Array(30)].map((_, i) => ({
+      id: i,
+      width: Math.random() * 3 + 1,
+      height: Math.random() * 3 + 1,
+      backgroundColor: i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#D4AF37' : '#FFA500',
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      animationDelay: Math.random() * 5,
+      animationDuration: 10 + Math.random() * 10,
+    }));
+  });
+
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -33,20 +47,20 @@ export default function AboutPage() {
         <div className="absolute top-0 right-1/4 w-[800px] h-[800px] bg-gradient-to-br from-[#FFD700]/5 via-[#FFA500]/3 to-transparent rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-[#D4AF37]/4 via-white/2 to-transparent rounded-full blur-3xl animate-float-delayed" />
         
-        {/* Gold particles */}
-        {[...Array(30)].map((_, i) => (
+        {/* Gold particles - FIXED VERSION */}
+        {particles.map((particle) => (
           <div
-            key={i}
+            key={particle.id}
             className="absolute rounded-full animate-particle"
             style={{
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              backgroundColor: i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#D4AF37' : '#FFA500',
+              width: `${particle.width}px`,
+              height: `${particle.height}px`,
+              backgroundColor: particle.backgroundColor,
               opacity: 0.2,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${10 + Math.random() * 10}s`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+              animationDelay: `${particle.animationDelay}s`,
+              animationDuration: `${particle.animationDuration}s`,
             }}
           />
         ))}
@@ -189,7 +203,7 @@ export default function AboutPage() {
                       <span className="text-[#E8E8E8]">Professional (also warm) Müsli Cooking Star Cook</span>
                     </div>
                   </div>
-                </div>
+                </div>  
 
                 {/* Contact Button */}
                 <div className="pt-6">
