@@ -1,4 +1,4 @@
-// types.ts - Alle TypeScript Typen für den Kalender
+// calendar-types.ts - All TypeScript types for the calendar
 
 export type Event = {
   id: string;

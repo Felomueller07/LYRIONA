@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import CookieBanner from "@/components/CookieBanner";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "LYRIONA - Musik Management Platform",
@@ -36,6 +38,12 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         {children}
+        
+        {/* Footer mit rechtlichen Links - erscheint auf ALLEN Seiten */}
+        <Footer />
+        
+        {/* Cookie Banner - erscheint beim ersten Besuch */}
+        <CookieBanner />
       </body>
     </html>
   );

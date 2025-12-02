@@ -136,25 +136,17 @@ export default function AboutPage() {
           {/* Card mit Bild & Text */}
           <div className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-[#FFD700]/20 rounded-3xl p-8 md:p-12 shadow-[0_0_80px_rgba(255,215,0,0.15)] animate-fade-in-up">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              {/* Bild Platzhalter */}
+              {/* Foto */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] to-[#FFA500] rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative aspect-square bg-gradient-to-br from-[#2d2d2d] to-[#1a1a1a] rounded-2xl border-2 border-[#FFD700]/40 overflow-hidden flex items-center justify-center">
-                  {/* Platzhalter für dein Bild */}
-                  <div className="text-center p-8">
-                    <Music size={80} className="text-[#FFD700] mx-auto mb-4 opacity-40" />
-                    <p className="text-[#808080] text-sm">
-                      Dein geiles Foto<br />kommt hier hin! 📸
-                    </p>
-                  </div>
-                  {/* Wenn du dein Bild einfügst, ersetze den div oben mit:
+                <div className="relative aspect-square bg-gradient-to-br from-[#2d2d2d] to-[#1a1a1a] rounded-2xl border-2 border-[#FFD700]/40 overflow-hidden">
                   <Image
-                    src="/images/felix-photo.jpg"
+                    src="/images/felix-photo.jpeg"
                     alt="Felix Müller"
                     fill
                     className="object-cover"
+                    priority
                   />
-                  */}
                 </div>
               </div>
 

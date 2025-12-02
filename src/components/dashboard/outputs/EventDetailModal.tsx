@@ -1,200 +1,297 @@
 import React from "react";
-import {X} from "lucide-react";
-import {EventDetailModalProps} from "./calendar-types";
+import { X, Calendar, Clock, Tag, Edit2, Trash2, Save } from "lucide-react";
+import { EventDetailModalProps } from "./calendar-types";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function EventDetailModal({
-                                             event,
-                                             categories,
-                                             isEditing,
-                                             editedEvent,
-                                             onClose,
-                                             onEdit,
-                                             onSave,
-                                             onDelete,
-                                             onCancelEdit,
-                                             onEditChange,
-                                         }: EventDetailModalProps) {
-    if (!event) return null;
+  event,
+  categories,
+  isEditing,
+  editedEvent,
+  onClose,
+  onEdit,
+  onSave,
+  onDelete,
+  onCancelEdit,
+  onEditChange,
+  role = "visitor",
+}: EventDetailModalProps) {
+  if (!event) return null;
 
-    const currentEvent = isEditing && editedEvent ? editedEvent : event;
+  const currentEvent = isEditing && editedEvent ? editedEvent : event;
+  const isGoogleEvent = event.id.startsWith('google-');
+  const canEdit = !isGoogleEvent && (event.id.startsWith('local-') || event.id.startsWith('school-'));
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-            <div className="bg-gradient-to-br from-[#2d2d2d] to-[#1a1a1a] rounded-3xl p-8 max-w-md w-full border border-[#D4AF37]/30 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="w-4 h-4 rounded-full shadow-lg"
-                            style={{backgroundColor: currentEvent.color}}
-                        />
-                        <h2 className="text-xl font-bold text-[#FFD700]">
-                            {isEditing ? "✏️ Termin bearbeiten" : "Termin Details"}
-                        </h2>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-full transition-all"
-                    >
-                        <X size={24} className="text-[#D4AF37]"/>
-                    </button>
-                </div>
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-6">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0"
+          onClick={onClose}
+        />
 
-                {isEditing && editedEvent ? (
-                    /* EDIT MODE */
-                    <div className="space-y-4">
-                        <div>
-                            <label className="text-xs text-[#C0C0C0] mb-2 block">Titel</label>
-                            <input
-                                type="text"
-                                value={editedEvent.title}
-                                onChange={(e) => onEditChange({...editedEvent, title: e.target.value})}
-                                className="w-full bg-[#1a1a1a] border border-[#C0C0C0]/20 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
-                            />
-                        </div>
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: "spring", duration: 0.5 }}
+          className="relative bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 max-w-lg w-full shadow-2xl"
+        >
+          {/* Top Accent with Event Color */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-1 rounded-t-[32px]"
+            style={{
+              background: `linear-gradient(to right, transparent, ${currentEvent.color}, transparent)`
+            }}
+          />
 
-                        <div>
-                            <label className="text-xs text-[#C0C0C0] mb-2 block">Datum</label>
-                            <input
-                                type="date"
-                                value={editedEvent.date}
-                                onChange={(e) => onEditChange({...editedEvent, date: e.target.value})}
-                                className="w-full bg-[#1a1a1a] border border-[#C0C0C0]/20 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="text-xs text-[#C0C0C0] mb-2 block">Start</label>
-                                <input
-                                    type="time"
-                                    value={editedEvent.startTime}
-                                    onChange={(e) => onEditChange({...editedEvent, startTime: e.target.value})}
-                                    className="w-full bg-[#1a1a1a] border border-[#C0C0C0]/20 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-[#C0C0C0] mb-2 block">Ende</label>
-                                <input
-                                    type="time"
-                                    value={editedEvent.endTime}
-                                    onChange={(e) => onEditChange({...editedEvent, endTime: e.target.value})}
-                                    className="w-full bg-[#1a1a1a] border border-[#C0C0C0]/20 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="text-xs text-[#C0C0C0] mb-2 block">Kalender</label>
-                            <select
-                                value={editedEvent.category}
-                                onChange={(e) => onEditChange({...editedEvent, category: e.target.value})}
-                                className="w-full bg-[#1a1a1a] border border-[#C0C0C0]/20 rounded-xl p-3 text-white focus:border-[#D4AF37] focus:outline-none"
-                            >
-                                {categories.map(cat => (
-                                    <option key={cat.name} value={cat.name}>
-                                        {cat.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                onClick={onCancelEdit}
-                                className="flex-1 py-3 bg-[#1a1a1a] hover:bg-[#2d2d2d] border border-[#C0C0C0]/20 rounded-2xl font-bold text-white transition-all"
-                            >
-                                Abbrechen
-                            </button>
-                            <button
-                                onClick={() => onSave(editedEvent)}
-                                className="flex-1 py-3 bg-gradient-to-r from-[#D4AF37] to-[#FFD700] hover:from-[#FFD700] hover:to-[#FFA500] rounded-2xl font-bold text-black transition-all shadow-lg"
-                            >
-                                Speichern
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    /* VIEW MODE */
-                    <div className="space-y-4">
-                        <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-[#C0C0C0]/20 rounded-xl p-4">
-                            <p className="text-xs text-[#C0C0C0] mb-1">Titel</p>
-                            <h3 className="text-lg font-bold text-[#FFD700]">{event.title}</h3>
-                        </div>
-
-                        <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-[#C0C0C0]/20 rounded-xl p-4">
-                            <p className="text-xs text-[#C0C0C0] mb-1">Datum</p>
-                            <p className="text-base font-semibold text-white">
-                                {new Date(event.date).toLocaleDateString('de-DE', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-[#C0C0C0]/20 rounded-xl p-4">
-                                <p className="text-xs text-[#C0C0C0] mb-1">Start</p>
-                                <p className="text-lg font-bold text-[#10B981]">
-                                    {event.startTime} Uhr
-                                </p>
-                            </div>
-                            <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-[#C0C0C0]/20 rounded-xl p-4">
-                                <p className="text-xs text-[#C0C0C0] mb-1">Ende</p>
-                                <p className="text-lg font-bold text-[#EF4444]">
-                                    {event.endTime} Uhr
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-[#C0C0C0]/20 rounded-xl p-4">
-                            <p className="text-xs text-[#C0C0C0] mb-2">Kalender</p>
-                            <div className="flex items-center gap-2">
-                                <div
-                                    className="w-3 h-3 rounded-full shadow-lg"
-                                    style={{backgroundColor: event.color}}
-                                />
-                                <span className="text-base font-semibold text-white">{event.category}</span>
-                            </div>
-                        </div>
-
-                        {event.id.startsWith('google-') && (
-                            <div className="bg-gradient-to-r from-[#1a1a1a] to-[#2d2d2d] border border-blue-500/20 rounded-xl p-3">
-                                <p className="text-xs text-blue-400 flex items-center gap-2">
-                                    <span>📅</span>
-                                    Dieser Termin kommt aus Google Calendar und kann nur dort bearbeitet werden
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="space-y-3 mt-6">
-                            {(event.id.startsWith('local-') || event.id.startsWith('school-')) && (
-                                <button
-                                    onClick={onEdit}
-                                    className="w-full py-3 bg-gradient-to-r from-[#3B82F6] to-[#2563EB] hover:from-[#2563EB] hover:to-[#1D4ED8] rounded-2xl font-bold text-white transition-all shadow-lg"
-                                >
-                                    ✏️ Bearbeiten
-                                </button>
-                            )}
-
-                            <button
-                                onClick={() => onDelete(event.id)}
-                                className="w-full py-3 bg-gradient-to-r from-[#EF4444] to-[#DC2626] hover:from-[#DC2626] hover:to-[#B91C1C] rounded-2xl font-bold text-white transition-all shadow-lg"
-                            >
-                                🗑️ Termin löschen
-                            </button>
-
-                            <button
-                                onClick={onClose}
-                                className="w-full py-3 bg-[#1a1a1a] hover:bg-[#2d2d2d] border border-[#C0C0C0]/20 rounded-2xl font-bold text-white transition-all"
-                            >
-                                Schließen
-                            </button>
-                        </div>
-                    </div>
-                )}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl"
+                style={{
+                  background: `linear-gradient(135deg, ${currentEvent.color}, ${currentEvent.color}cc)`,
+                  boxShadow: `0 10px 30px ${currentEvent.color}50`
+                }}
+              >
+                <Calendar size={22} className="text-black" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">
+                  {isEditing ? "Termin bearbeiten" : "Termin Details"}
+                </h2>
+                <p className="text-xs text-gray-400 mt-1">{currentEvent.category}</p>
+              </div>
             </div>
-        </div>
-    );
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-xl transition-all"
+            >
+              <X size={22} className="text-gray-400" />
+            </motion.button>
+          </div>
+
+          {isEditing && editedEvent ? (
+            /* EDIT MODE */
+            <div className="space-y-6">
+              {/* Title */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-white mb-3">
+                  <Tag size={16} className="text-[#FFD700]" />
+                  Titel
+                </label>
+                <input
+                  type="text"
+                  value={editedEvent.title}
+                  onChange={(e) => onEditChange({ ...editedEvent, title: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:border-[#FFD700] focus:outline-none focus:ring-2 focus:ring-[#FFD700]/20 transition-all backdrop-blur-xl"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-white mb-3">
+                  <Calendar size={16} className="text-[#FFD700]" />
+                  Datum
+                </label>
+                <input
+                  type="date"
+                  value={editedEvent.date}
+                  onChange={(e) => onEditChange({ ...editedEvent, date: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:border-[#FFD700] focus:outline-none focus:ring-2 focus:ring-[#FFD700]/20 transition-all backdrop-blur-xl"
+                />
+              </div>
+
+              {/* Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold text-white mb-3">
+                    <Clock size={16} className="text-[#FFD700]" />
+                    Start
+                  </label>
+                  <input
+                    type="time"
+                    value={editedEvent.startTime}
+                    onChange={(e) => onEditChange({ ...editedEvent, startTime: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:border-[#FFD700] focus:outline-none focus:ring-2 focus:ring-[#FFD700]/20 transition-all backdrop-blur-xl"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-bold text-white mb-3">
+                    <Clock size={16} className="text-[#FFD700]" />
+                    Ende
+                  </label>
+                  <input
+                    type="time"
+                    value={editedEvent.endTime}
+                    onChange={(e) => onEditChange({ ...editedEvent, endTime: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:border-[#FFD700] focus:outline-none focus:ring-2 focus:ring-[#FFD700]/20 transition-all backdrop-blur-xl"
+                  />
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-white mb-3">
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: editedEvent.color }} />
+                  Kalender
+                </label>
+                <select
+                  value={editedEvent.category}
+                  onChange={(e) => onEditChange({ ...editedEvent, category: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:border-[#FFD700] focus:outline-none focus:ring-2 focus:ring-[#FFD700]/20 transition-all backdrop-blur-xl"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.name} value={cat.name} className="bg-[#1a1a1a] text-white">
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4 mt-8">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onCancelEdit}
+                  className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-white transition-all"
+                >
+                  Abbrechen
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => onSave(editedEvent)}
+                  className="flex-1 py-4 bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FFD700] rounded-2xl font-bold text-black transition-all shadow-xl shadow-[#FFD700]/30 flex items-center justify-center gap-2"
+                >
+                  <Save size={18} />
+                  Speichern
+                </motion.button>
+              </div>
+            </div>
+          ) : (
+            /* VIEW MODE */
+            <div className="space-y-6">
+              {/* Title */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+                <p className="text-xs text-gray-400 mb-2 flex items-center gap-2">
+                  <Tag size={14} />
+                  Titel
+                </p>
+                <h3 className="text-xl font-black text-white">{event.title}</h3>
+              </div>
+
+              {/* Date */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+                <p className="text-xs text-gray-400 mb-2 flex items-center gap-2">
+                  <Calendar size={14} />
+                  Datum
+                </p>
+                <p className="text-lg font-bold text-white">
+                  {new Date(event.date).toLocaleDateString('de-DE', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+                  <p className="text-xs text-gray-400 mb-2 flex items-center gap-2">
+                    <Clock size={14} />
+                    Start
+                  </p>
+                  <p className="text-xl font-black text-emerald-400">
+                    {event.startTime}
+                  </p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+                  <p className="text-xs text-gray-400 mb-2 flex items-center gap-2">
+                    <Clock size={14} />
+                    Ende
+                  </p>
+                  <p className="text-xl font-black text-red-400">
+                    {event.endTime}
+                  </p>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+                <p className="text-xs text-gray-400 mb-3">Kalender</p>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-4 h-4 rounded-full shadow-lg"
+                    style={{ 
+                      backgroundColor: event.color,
+                      boxShadow: `0 0 10px ${event.color}50`
+                    }}
+                  />
+                  <span className="text-base font-bold text-white">{event.category}</span>
+                </div>
+              </div>
+
+              {/* Google Event Notice */}
+              {isGoogleEvent && (
+                <div className="bg-blue-500/10 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-4">
+                  <p className="text-xs text-blue-400 flex items-center gap-2">
+                    <Calendar size={14} />
+                    Dieser Termin kommt aus Google Calendar und kann nur dort bearbeitet werden
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="space-y-3 mt-8">
+                {canEdit && role === "admin" && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={onEdit}
+                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl font-bold text-white transition-all shadow-xl flex items-center justify-center gap-2"
+                  >
+                    <Edit2 size={18} />
+                    Bearbeiten
+                  </motion.button>
+                )}
+
+                {role === "admin" && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onDelete(event.id)}
+                    className="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-2xl font-bold text-white transition-all shadow-xl flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={18} />
+                    Löschen
+                  </motion.button>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onClose}
+                  className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-white transition-all"
+                >
+                  Schließen
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
 }

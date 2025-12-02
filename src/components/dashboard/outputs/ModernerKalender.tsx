@@ -8,6 +8,8 @@ import CalendarMonthView from "./CalendarMonthView";
 import EventDetailModal from "./EventDetailModal";
 import CreateEventModal from "./CreateEventModal";
 import { Event, Category, CalendarProps } from "./calendar-types";
+import { motion } from "framer-motion";
+import { Toaster } from 'react-hot-toast';
 
 export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -25,13 +27,12 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
     category: "SPG",
   });
 
-  // Südtiroler Schulkalender Generator 🎓
+  // Südtiroler Schulkalender Generator
   const generateSchoolEvents = (): Event[] => {
     const schoolEvents: Event[] = [];
-    const startDate = new Date('2024-09-05'); // Schulstart Südtirol 2024/25
-    const endDate = new Date('2026-06-13'); // Schulende Südtirol 2025/26 - VERLÄNGERT!
+    const startDate = new Date('2024-09-05');
+    const endDate = new Date('2026-06-13');
 
-    // Südtiroler Schulferien 2024/25 + 2025/26
     const holidays = [
       // 2024/25 Ferien
       { start: new Date('2024-10-31'), end: new Date('2024-11-02') },
@@ -39,25 +40,25 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
       { start: new Date('2024-12-23'), end: new Date('2025-01-06') },
       { start: new Date('2025-02-17'), end: new Date('2025-03-02') },
       { start: new Date('2025-04-17'), end: new Date('2025-04-22') },
-      { start: new Date('2025-06-14'), end: new Date('2025-09-04') }, // SOMMERFERIEN 2025!
+      { start: new Date('2025-06-14'), end: new Date('2025-09-04') },
 
       // 2025/26 Ferien
-      { start: new Date('2025-10-30'), end: new Date('2025-11-01') }, // Herbstferien
-      { start: new Date('2025-12-22'), end: new Date('2026-01-06') }, // Weihnachtsferien
-      { start: new Date('2026-02-16'), end: new Date('2026-03-01') }, // Semesterferien
-      { start: new Date('2026-04-02'), end: new Date('2026-04-07') }, // Osterferien
+      { start: new Date('2025-10-30'), end: new Date('2025-11-01') },
+      { start: new Date('2025-12-22'), end: new Date('2026-01-06') },
+      { start: new Date('2026-02-16'), end: new Date('2026-03-01') },
+      { start: new Date('2026-04-02'), end: new Date('2026-04-07') },
 
-      // Staatsfeiertage (jährlich)
-      { start: new Date('2024-11-01'), end: new Date('2024-11-01') }, // Allerheiligen
-      { start: new Date('2024-12-08'), end: new Date('2024-12-08') }, // Maria Empfängnis
-      { start: new Date('2025-04-25'), end: new Date('2025-04-25') }, // Tag der Befreiung
-      { start: new Date('2025-05-01'), end: new Date('2025-05-01') }, // Tag der Arbeit
-      { start: new Date('2025-06-02'), end: new Date('2025-06-02') }, // Tag der Republik
-      { start: new Date('2025-11-01'), end: new Date('2025-11-01') }, // Allerheiligen 2025
-      { start: new Date('2025-12-08'), end: new Date('2025-12-08') }, // Maria Empfängnis 2025
-      { start: new Date('2026-04-25'), end: new Date('2026-04-25') }, // Tag der Befreiung 2026
-      { start: new Date('2026-05-01'), end: new Date('2026-05-01') }, // Tag der Arbeit 2026
-      { start: new Date('2026-06-02'), end: new Date('2026-06-02') }, // Tag der Republik 2026
+      // Staatsfeiertage
+      { start: new Date('2024-11-01'), end: new Date('2024-11-01') },
+      { start: new Date('2024-12-08'), end: new Date('2024-12-08') },
+      { start: new Date('2025-04-25'), end: new Date('2025-04-25') },
+      { start: new Date('2025-05-01'), end: new Date('2025-05-01') },
+      { start: new Date('2025-06-02'), end: new Date('2025-06-02') },
+      { start: new Date('2025-11-01'), end: new Date('2025-11-01') },
+      { start: new Date('2025-12-08'), end: new Date('2025-12-08') },
+      { start: new Date('2026-04-25'), end: new Date('2026-04-25') },
+      { start: new Date('2026-05-01'), end: new Date('2026-05-01') },
+      { start: new Date('2026-06-02'), end: new Date('2026-06-02') },
     ];
 
     const isHoliday = (date: Date): boolean => {
@@ -78,15 +79,11 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
     while (currentDate <= endDate) {
       const dayOfWeek = currentDate.getDay();
 
-      // Montag (1), Mittwoch (3), Freitag (5) = 7:50-13:05
-      // Dienstag (2), Donnerstag (4) = 7:50-16:50
-      // Samstag (6) und Sonntag (0) = keine Schule
-
       if (dayOfWeek >= 1 && dayOfWeek <= 5 && !isHoliday(currentDate)) {
         const dateStr = currentDate.toISOString().split('T')[0];
 
         let endTime = '13:05';
-        if (dayOfWeek === 2 || dayOfWeek === 4) { // Dienstag oder Donnerstag
+        if (dayOfWeek === 2 || dayOfWeek === 4) {
           endTime = '16:50';
         }
 
@@ -104,11 +101,10 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    console.log(`🎓 ${schoolEvents.length} Schultermine generiert (Sep 2024 - Jun 2026)`);
     return schoolEvents;
   };
 
-  // Lade Termine aus localStorage beim Start + Schultermine
+  // Load events from localStorage + School events
   const [events, setEvents] = useState<Event[]>(() => {
     const schoolEvents = generateSchoolEvents();
 
@@ -124,7 +120,6 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
         if (daysSinceLastSync < 7) {
           const cached = JSON.parse(savedEvents);
           const nonSchoolEvents = cached.filter((e: Event) => !e.id.startsWith('school-'));
-          console.log(`📦 Lade ${nonSchoolEvents.length} Termine aus Cache + ${schoolEvents.length} Schultermine`);
           return [...schoolEvents, ...nonSchoolEvents];
         }
       }
@@ -162,23 +157,13 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
   };
 
   const handleEventsImported = (importedEvents: Event[]) => {
-    // Behalte ALLE Schultermine
     const schoolEvents = events.filter(e => e.id.startsWith('school-'));
-    
-    // Behalte ALLE lokalen Termine (selbst erstellt)
     const localEvents = events.filter(e => e.id.startsWith('local-'));
-    
-    // ENTFERNE alte Google Events (die werden durch neue ersetzt)
-    // Füge die NEUEN Google Events hinzu
     const allEvents = [...schoolEvents, ...localEvents, ...importedEvents];
     
     if (typeof window !== 'undefined') {
       localStorage.setItem('calendarEvents', JSON.stringify(allEvents));
       localStorage.setItem('calendarEventsTimestamp', Date.now().toString());
-      console.log(`💾 ${allEvents.length} Termine gespeichert:`);
-      console.log(`  - ${schoolEvents.length} Schultermine`);
-      console.log(`  - ${localEvents.length} lokale Termine`);
-      console.log(`  - ${importedEvents.length} Google Termine`);
     }
 
     setEvents(allEvents);
@@ -262,108 +247,264 @@ export default function ModernerKalender({ role = "visitor" }: CalendarProps) {
   const weekDates = getWeekDates();
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#1a1a1a] text-white p-6 flex gap-6 relative">
-      {role === "admin" && (
-        <CreateEventModal
-          show={showCreateModal}
-          categories={categories}
-          newEvent={newEvent}
-          onChange={setNewEvent}
-          onCreate={handleCreateEvent}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
+    <div className="min-h-screen bg-[#000000] text-white font-[system-ui] relative overflow-hidden">
+      <Toaster position="top-center" />
 
-      <EventDetailModal
-        event={selectedEvent}
-        categories={categories}
-        isEditing={isEditingEvent}
-        editedEvent={editedEvent}
-        onClose={() => {
-          setSelectedEvent(null);
-          setIsEditingEvent(false);
-          setEditedEvent(null);
-        }}
-        onEdit={() => {
-          setEditedEvent(selectedEvent);
-          setIsEditingEvent(true);
-        }}
-        onSave={handleSaveEditedEvent}
-        onDelete={handleDeleteEvent}
-        onCancelEdit={() => {
-          setIsEditingEvent(false);
-          setEditedEvent(null);
-        }}
-        onEditChange={setEditedEvent}
-        role={role}
-      />
-
-      <CalendarSidebar
-        currentDate={currentDate}
-        monthNames={monthNames}
-        weekDays={weekDays}
-        categories={categories}
-        showAllCategories={showAllCategories}
-        setShowAllCategories={setShowAllCategories}
-        onMonthChange={(increment) => {
-          const newDate = new Date(currentDate);
-          newDate.setMonth(newDate.getMonth() + increment);
-          setCurrentDate(newDate);
-        }}
-        onEventsImported={handleEventsImported}
-        role={role}
-        events={events}
-      />
-
-      <div className="flex-1 flex flex-col">
-        <CalendarHeader
-          currentDate={currentDate}
-          monthNames={monthNames}
-          view={view}
-          onPreviousWeek={() => {
-            const newDate = new Date(currentDate);
-            newDate.setDate(newDate.getDate() - 7);
-            setCurrentDate(newDate);
-          }}
-          onNextWeek={() => {
-            const newDate = new Date(currentDate);
-            newDate.setDate(newDate.getDate() + 7);
-            setCurrentDate(newDate);
-          }}
-          onPreviousMonth={() => {
-            const newDate = new Date(currentDate);
-            newDate.setMonth(newDate.getMonth() - 1);
-            setCurrentDate(newDate);
-          }}
-          onNextMonth={() => {
-            const newDate = new Date(currentDate);
-            newDate.setMonth(newDate.getMonth() + 1);
-            setCurrentDate(newDate);
-          }}
-          onCreateEvent={() => setShowCreateModal(true)}
-          onToggleView={() => setView(view === "week" ? "month" : "week")}
-        />
-
-        {view === "week" ? (
-          <CalendarWeekView
-            weekDates={weekDates}
-            weekDays={weekDays}
-            hours={hours}
-            events={events}
-            onEventClick={setSelectedEvent}
-          />
-        ) : (
-          <CalendarMonthView
-            currentDate={currentDate}
-            events={events.filter((e: Event) => !e.id.startsWith('school-'))} // Keine Schultermine in Monatsansicht
-            onEventClick={setSelectedEvent}
-            onDateClick={(date: Date) => {
-              setCurrentDate(date);
-              setView("week");
+      {/* 🎨 AURORA BACKGROUND */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Aurora Waves */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute w-full h-[500px] -top-20 animate-aurora-1"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.35), rgba(255,215,0,0.3), rgba(255,223,128,0.25), rgba(192,192,192,0.2), transparent)',
+              filter: 'blur(80px)',
             }}
           />
-        )}
+          <div 
+            className="absolute w-full h-[400px] top-1/4 animate-aurora-2"
+            style={{
+              background: 'linear-gradient(-90deg, transparent, rgba(255,255,255,0.18), rgba(224,224,224,0.15), rgba(212,175,55,0.2), transparent)',
+              filter: 'blur(90px)',
+            }}
+          />
+          <div 
+            className="absolute w-full h-[550px] top-1/2 animate-aurora-3"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(192,192,192,0.28), rgba(255,215,0,0.22), rgba(255,255,255,0.15), transparent)',
+              filter: 'blur(100px)',
+            }}
+          />
+          <div 
+            className="absolute w-full h-[350px] bottom-0 animate-aurora-4"
+            style={{
+              background: 'linear-gradient(-90deg, transparent, rgba(212,175,55,0.3), rgba(255,215,0,0.18), rgba(255,255,255,0.12), transparent)',
+              filter: 'blur(95px)',
+            }}
+          />
+          <div 
+            className="absolute w-full h-[450px] top-1/3 animate-aurora-5"
+            style={{
+              background: 'linear-gradient(45deg, transparent, rgba(255,215,0,0.15), transparent)',
+              filter: 'blur(110px)',
+            }}
+          />
+        </div>
+
+        {/* Moving Particles */}
+        {[...Array(60)].map((_, i) => {
+          const size = Math.random() * 3 + 1;
+          const colors = ['#FFD700', '#D4AF37', '#C0C0C0', '#FFFFFF'];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          const isGold = color === '#FFD700' || color === '#D4AF37';
+          
+          return (
+            <div
+              key={i}
+              className="absolute rounded-full animate-particle-float"
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                backgroundColor: color,
+                opacity: 0.4,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 8}s`,
+                animationDuration: `${8 + Math.random() * 12}s`,
+                boxShadow: isGold 
+                  ? `0 0 ${size * 3}px ${color}` 
+                  : `0 0 ${size * 2}px rgba(255,255,255,0.3)`,
+                filter: 'blur(0.5px)',
+              }}
+            />
+          );
+        })}
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/80" />
       </div>
+
+      {/* Content */}
+      <div className="relative z-10 p-6">
+        {role === "admin" && (
+          <CreateEventModal
+            show={showCreateModal}
+            categories={categories}
+            newEvent={newEvent}
+            onChange={setNewEvent}
+            onCreate={handleCreateEvent}
+            onClose={() => setShowCreateModal(false)}
+          />
+        )}
+
+        <EventDetailModal
+          event={selectedEvent}
+          categories={categories}
+          isEditing={isEditingEvent}
+          editedEvent={editedEvent}
+          onClose={() => {
+            setSelectedEvent(null);
+            setIsEditingEvent(false);
+            setEditedEvent(null);
+          }}
+          onEdit={() => {
+            setEditedEvent(selectedEvent);
+            setIsEditingEvent(true);
+          }}
+          onSave={handleSaveEditedEvent}
+          onDelete={handleDeleteEvent}
+          onCancelEdit={() => {
+            setIsEditingEvent(false);
+            setEditedEvent(null);
+          }}
+          onEditChange={setEditedEvent}
+          role={role}
+        />
+
+        <div className="flex gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <CalendarSidebar
+              currentDate={currentDate}
+              monthNames={monthNames}
+              weekDays={weekDays}
+              categories={categories}
+              showAllCategories={showAllCategories}
+              setShowAllCategories={setShowAllCategories}
+              onMonthChange={(increment) => {
+                const newDate = new Date(currentDate);
+                newDate.setMonth(newDate.getMonth() + increment);
+                setCurrentDate(newDate);
+              }}
+              onEventsImported={handleEventsImported}
+              role={role}
+              events={events}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex-1 flex flex-col"
+          >
+            <CalendarHeader
+              currentDate={currentDate}
+              monthNames={monthNames}
+              view={view}
+              onPreviousWeek={() => {
+                const newDate = new Date(currentDate);
+                newDate.setDate(newDate.getDate() - 7);
+                setCurrentDate(newDate);
+              }}
+              onNextWeek={() => {
+                const newDate = new Date(currentDate);
+                newDate.setDate(newDate.getDate() + 7);
+                setCurrentDate(newDate);
+              }}
+              onPreviousMonth={() => {
+                const newDate = new Date(currentDate);
+                newDate.setMonth(newDate.getMonth() - 1);
+                setCurrentDate(newDate);
+              }}
+              onNextMonth={() => {
+                const newDate = new Date(currentDate);
+                newDate.setMonth(newDate.getMonth() + 1);
+                setCurrentDate(newDate);
+              }}
+              onCreateEvent={() => setShowCreateModal(true)}
+              onToggleView={() => setView(view === "week" ? "month" : "week")}
+              role={role}
+            />
+
+            {view === "week" ? (
+              <CalendarWeekView
+                weekDates={weekDates}
+                weekDays={weekDays}
+                hours={hours}
+                events={events}
+                onEventClick={setSelectedEvent}
+              />
+            ) : (
+              <CalendarMonthView
+                currentDate={currentDate}
+                events={events.filter((e: Event) => !e.id.startsWith('school-'))}
+                onEventClick={setSelectedEvent}
+                onDateClick={(date: Date) => {
+                  setCurrentDate(date);
+                  setView("week");
+                }}
+              />
+            )}
+          </motion.div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        * {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        @keyframes aurora-1 {
+          0%, 100% { transform: translateX(-10%) translateY(0) scaleX(1); }
+          50% { transform: translateX(10%) translateY(-30px) scaleX(1.15); }
+        }
+
+        @keyframes aurora-2 {
+          0%, 100% { transform: translateX(15%) translateY(0) scaleX(1); }
+          50% { transform: translateX(-15%) translateY(40px) scaleX(1.2); }
+        }
+
+        @keyframes aurora-3 {
+          0%, 100% { transform: translateX(-8%) translateY(0) scaleX(1); }
+          50% { transform: translateX(8%) translateY(-20px) scaleX(1.12); }
+        }
+
+        @keyframes aurora-4 {
+          0%, 100% { transform: translateX(12%) translateY(0) scaleX(1); }
+          50% { transform: translateX(-12%) translateY(35px) scaleX(1.18); }
+        }
+
+        @keyframes aurora-5 {
+          0%, 100% { transform: rotate(0deg) translateX(-5%) scaleX(1); }
+          50% { transform: rotate(2deg) translateX(5%) scaleX(1.1); }
+        }
+
+        @keyframes particle-float {
+          0% {
+            transform: translateY(0) translateX(0) scale(1);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.6;
+          }
+          50% {
+            opacity: 0.4;
+            transform: translateY(-50vh) translateX(30px) scale(1.1);
+          }
+          90% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(-120vh) translateX(-20px) scale(0.8);
+            opacity: 0;
+          }
+        }
+
+        .animate-aurora-1 { animation: aurora-1 18s ease-in-out infinite; }
+        .animate-aurora-2 { animation: aurora-2 22s ease-in-out infinite; }
+        .animate-aurora-3 { animation: aurora-3 25s ease-in-out infinite; }
+        .animate-aurora-4 { animation: aurora-4 20s ease-in-out infinite; }
+        .animate-aurora-5 { animation: aurora-5 30s ease-in-out infinite; }
+        .animate-particle-float { animation: particle-float linear infinite; }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }

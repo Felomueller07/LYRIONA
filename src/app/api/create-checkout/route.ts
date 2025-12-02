@@ -15,16 +15,26 @@ export async function POST(req: NextRequest) {
 
         // Initialize Stripe INSIDE the route → avoids build-time execution
         const stripe = new Stripe(apiKey, {
-            apiVersion: "2025-10-29.clover",
+            apiVersion: "2025-11-17.clover", // ✅ EXAKT was TypeScript will!
         });
 
-        const {seatId, name, email, phone, price} = await req.json();
+        // ✅ UPDATED: Support für mehrere Sitze!
+        const {seatId, seatIds, name, email, phone, price, totalPrice} = await req.json();
+
+        // Kompatibilität: Einzelner Sitz ODER mehrere Sitze
+        const seats = seatIds || [seatId]; // Array von Sitzen
+        const finalPrice = totalPrice || price; // Gesamtpreis oder Einzelpreis
+        const seatList = Array.isArray(seats) ? seats.join(",") : seats;
+        const seatDisplay = Array.isArray(seats) 
+            ? seats.map((id: string) => id.replace("seat_", "").replace("_", " ")).join(", ")
+            : seats.replace("seat_", "").replace("_", " ");
 
         console.log("🎫 Erstelle Checkout Session für:", {
-            seatId,
+            seats: seatList,
             name,
             email,
-            price,
+            totalPrice: finalPrice,
+            numberOfSeats: Array.isArray(seats) ? seats.length : 1,
         });
 
         const session = await stripe.checkout.sessions.create({
@@ -34,28 +44,34 @@ export async function POST(req: NextRequest) {
                     price_data: {
                         currency: "eur",
                         product_data: {
-                            name: `Sitzplatz ${seatId}`,
-                            description: `LYRIONA Konzert - Reservierung für ${name}`,
+                            name: Array.isArray(seats) && seats.length > 1
+                                ? `${seats.length} Tickets - Josefi Konzert`
+                                : `Sitzplatz ${seatDisplay}`,
+                            description: `LYRIONA Konzert - Reservierung für ${name} | Sitzplätze: ${seatDisplay}`,
                         },
-                        unit_amount: Math.round(price * 100),
+                        unit_amount: Math.round(finalPrice * 100), // ✅ Gesamtpreis in Cents
                     },
                     quantity: 1,
                 },
             ],
             mode: "payment",
+            // ✅ FIXED: Redirect zu KARTENVERKAUF Tab + seats (plural!)
             success_url: `${
                 req.headers.get("origin") || "http://localhost:3000"
-            }/dashboard?tab=tickets&success=true&seat=${seatId}&name=${encodeURIComponent(
+            }/dashboard?tab=kartenverkauf&role=admin&success=true&seats=${encodeURIComponent(
+                seatList
+            )}&name=${encodeURIComponent(
                 name
             )}&email=${encodeURIComponent(email)}`,
             cancel_url: `${
                 req.headers.get("origin") || "http://localhost:3000"
-            }/dashboard?tab=tickets`,
+            }/dashboard?tab=kartenverkauf&role=admin`,
             customer_email: email,
             metadata: {
-                seatId,
+                seatIds: seatList,
                 customerName: name,
                 phone: phone || "",
+                numberOfSeats: Array.isArray(seats) ? seats.length : 1,
             },
         });
 

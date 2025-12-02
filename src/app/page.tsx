@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Music, Target, Calendar, TrendingUp, Users, Zap, Shield, Award } from "lucide-react";
 import AuthModal from "@/components/dashboard/outputs/AuthModal";
+import Lenis from "lenis";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Register GSAP plugins
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -16,7 +24,14 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Generiere Partikel NUR EINMAL beim Mount
+  // Refs for animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
+
+  // Generiere Partikel
   const [particles] = useState(() => {
     const colors = ['#FFD700', '#D4AF37', '#FFA500', '#FFFFFF', '#E8E8E8', '#C0C0C0'];
     return [...Array(50)].map((_, i) => {
@@ -40,23 +55,225 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true);
-    const handleScroll = () => setScrollY(window.scrollY);
+
+    // Initialize Lenis smooth scrolling
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+      infinite: false,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    // Sync Lenis with ScrollTrigger
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // Mouse move for cursor follower
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
-
-    window.addEventListener("scroll", handleScroll);
     window.addEventListener("mousemove", handleMouseMove);
 
+    // Scroll for parallax
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      lenis.destroy();
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
+  // GSAP Scroll Animations
+  useEffect(() => {
+    if (!mounted) return;
+
+    const ctx = gsap.context(() => {
+      // Hero parallax animation
+      gsap.to(".hero-content", {
+        yPercent: 30,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      // Hero fade out
+      gsap.to(".hero-content", {
+        opacity: 0,
+        ease: "power2.inOut",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      // Features - fade in from bottom with stagger
+      gsap.fromTo(
+        ".feature-card",
+        {
+          y: 100,
+          opacity: 0,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // Feature title
+      gsap.fromTo(
+        ".features-title",
+        {
+          y: 50,
+          opacity: 0,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // Stats - scale + fade in with stagger
+      gsap.fromTo(
+        ".stat-card",
+        {
+          scale: 0.8,
+          opacity: 0,
+        },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "back.out(1.2)",
+          scrollTrigger: {
+            trigger: statsRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // CTA - fade in from bottom
+      gsap.fromTo(
+        ".cta-content",
+        {
+          y: 80,
+          opacity: 0,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ctaRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // Contact section - slide in from sides
+      gsap.fromTo(
+        ".contact-left",
+        {
+          x: -100,
+          opacity: 0,
+        },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: contactRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      gsap.fromTo(
+        ".contact-right",
+        {
+          x: 100,
+          opacity: 0,
+        },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: contactRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+
+      // Contact title
+      gsap.fromTo(
+        ".contact-title",
+        {
+          y: 50,
+          opacity: 0,
+        },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: contactRef.current,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+
+    return () => ctx.revert();
+  }, [mounted]);
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative">
-      {/* Cursor Follower - Weißer subtiler Glow - SMOOTH */}
+    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden relative">
+      {/* Cursor Follower */}
       <div
         className="fixed w-96 h-96 pointer-events-none z-50 transition-all duration-700 ease-out"
         style={{
@@ -66,14 +283,12 @@ export default function HomePage() {
         }}
       />
 
-      {/* Animated Background - Mehr Silber/Weiß, weniger Gold */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Large flowing shapes - Silber-dominant */}
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden">
         <div className="absolute top-0 right-1/4 w-[800px] h-[800px] bg-gradient-to-br from-white/4 via-[#E8E8E8]/2 to-transparent rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-[#C0C0C0]/5 via-white/3 to-transparent rounded-full blur-3xl animate-float-delayed" />
         <div className="absolute top-1/2 left-1/2 w-[700px] h-[700px] bg-gradient-to-br from-[#D4AF37]/2 via-transparent to-white/4 rounded-full blur-3xl animate-float-slow" />
 
-        {/* Mixed particles - Mehr Gold */}
         {mounted && particles.map((particle) => (
           <div
             key={particle.id}
@@ -91,7 +306,6 @@ export default function HomePage() {
           />
         ))}
 
-        {/* Silberne/Weiße Linien */}
         {[...Array(6)].map((_, i) => (
           <div
             key={`line-${i}`}
@@ -105,9 +319,9 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Grid Overlay - Weiß */}
+      {/* Grid Overlay */}
       <div
-        className="absolute inset-0 opacity-[0.015]"
+        className="fixed inset-0 opacity-[0.015]"
         style={{
           backgroundImage: `linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
                             linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)`,
@@ -115,7 +329,7 @@ export default function HomePage() {
         }}
       />
 
-      {/* Navigation - Clean & Modern */}
+      {/* Navigation */}
       <nav className="relative z-20 border-b border-white/10 bg-black/60 backdrop-blur-2xl sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-5">
           <div className="flex items-center justify-between">
@@ -133,11 +347,13 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#home" className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold">
+              <Link 
+                href="/home"
+                className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold"
+              >
                 Home
-              </a>
+              </Link>
               <a href="#features" className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold">
                 Features
               </a>
@@ -153,7 +369,6 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Anmelden Button */}
               <button
                 onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FFD700] text-black font-bold rounded-lg sm:rounded-xl transition-all hover:scale-105 text-sm sm:text-base shadow-lg"
@@ -161,7 +376,6 @@ export default function HomePage() {
                 Anmelden
               </button>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 text-white hover:text-[#FFD700] transition-colors"
@@ -178,17 +392,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4 animate-fade-in">
+            <div className="md:hidden mt-4 pb-4 border-t border-white/10 pt-4">
               <div className="flex flex-col gap-3">
-                <a 
-                  href="#home" 
+                <Link 
+                  href="/home"
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-white hover:text-[#FFD700] transition-colors text-base font-semibold py-2 px-4 rounded-lg hover:bg-white/5"
                 >
                   Home
-                </a>
+                </Link>
                 <a 
                   href="#features" 
                   onClick={() => setMobileMenuOpen(false)}
@@ -216,78 +429,88 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section id="home" className="relative z-10 pt-20 md:pt-32 pb-12 md:pb-20" style={{ transform: `translateY(${scrollY * 0.05}px)` }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center">
-            {/* Logo - Mehr Gold Glow */}
-            <div className="mb-8 md:mb-12 flex justify-center">
-              <div className="relative w-28 h-28 md:w-40 md:h-40 group">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/50 via-[#FFA500]/30 to-[#FFD700]/50 rounded-[2rem] blur-3xl opacity-50 group-hover:opacity-70 transition-opacity animate-pulse-glow" />
-                <div className="relative w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-[2rem] border border-[#FFD700]/20 p-4 md:p-6 flex items-center justify-center transform group-hover:scale-105 transition-transform">
-                  <Image
-                    src="/images/lyriona-logo.png"
-                    alt="LYRIONA"
-                    fill
-                    className="object-contain p-4 md:p-6"
-                  />
+      {/* Hero Section with Parallax */}
+      <section 
+        ref={heroRef}
+        id="home" 
+        className="relative z-10 min-h-screen flex items-center"
+      >
+        <div className="hero-content w-full pt-20 md:pt-32 pb-12 md:pb-20">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center">
+              {/* Logo */}
+              <div className="mb-8 md:mb-12 flex justify-center">
+                <div className="relative w-28 h-28 md:w-40 md:h-40 group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/50 via-[#FFA500]/30 to-[#FFD700]/50 rounded-[2rem] blur-3xl opacity-50 group-hover:opacity-70 transition-opacity animate-pulse-glow" />
+                  <div className="relative w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-[2rem] border border-[#FFD700]/20 p-4 md:p-6 flex items-center justify-center transform group-hover:scale-105 transition-transform">
+                    <Image
+                      src="/images/lyriona-logo.png"
+                      alt="LYRIONA"
+                      fill
+                      className="object-contain p-4 md:p-6"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Ornament - Gold */}
-            <div className="flex items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8 animate-fade-in">
-              <div className="w-8 md:w-16 h-[1px] bg-gradient-to-r from-transparent to-[#D4AF37]/60" />
-              <span className="text-[#D4AF37] text-[0.65rem] md:text-xs tracking-[0.3em] md:tracking-[0.4em] font-light">WILLKOMMEN BEI</span>
-              <div className="w-8 md:w-16 h-[1px] bg-gradient-to-l from-transparent to-[#D4AF37]/60" />
-            </div>
+              {/* Ornament */}
+              <div className="flex items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8">
+                <div className="w-8 md:w-16 h-[1px] bg-gradient-to-r from-transparent to-[#D4AF37]/60" />
+                <span className="text-[#D4AF37] text-[0.65rem] md:text-xs tracking-[0.3em] md:tracking-[0.4em] font-light">WILLKOMMEN BEI</span>
+                <div className="w-8 md:w-16 h-[1px] bg-gradient-to-l from-transparent to-[#D4AF37]/60" />
+              </div>
 
-            {/* Title - Komplett Gold mit Animation - Responsive */}
-            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black mb-6 md:mb-8 leading-none animate-title-appear px-4">
-              <span 
-                className="bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]"
-                style={{
-                  filter: "drop-shadow(0 0 40px rgba(255,215,0,0.4))",
-                }}
-              >
-                LYRIONA
-              </span>
-            </h1>
+              {/* Title */}
+              <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black mb-6 md:mb-8 leading-none px-4">
+                <span 
+                  className="bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]"
+                  style={{
+                    filter: "drop-shadow(0 0 40px rgba(255,215,0,0.4))",
+                  }}
+                >
+                  LYRIONA
+                </span>
+              </h1>
 
-            {/* Subtitle - Silber mit Gold Akzent */}
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white mb-3 md:mb-6 font-light animate-fade-in-up px-4" style={{ animationDelay: "0.2s" }}>
-              Die <span className="text-[#FFD700] font-medium">moderne</span> Plattform
-            </p>
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white mb-8 md:mb-12 font-light animate-fade-in-up px-4" style={{ animationDelay: "0.3s" }}>
-              für dein Musik-Management
-            </p>
+              {/* Subtitle */}
+              <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white mb-3 md:mb-6 font-light px-4">
+                Die <span className="text-[#FFD700] font-medium">moderne</span> Plattform
+              </p>
+              <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white mb-8 md:mb-12 font-light px-4">
+                für dein Musik-Management
+              </p>
 
-            <p className="text-[#C0C0C0] max-w-2xl mx-auto mb-10 md:mb-16 text-sm sm:text-base md:text-lg leading-relaxed animate-fade-in-up px-4" style={{ animationDelay: "0.4s" }}>
-              Verwalte deine Noten, tracke deine Ziele und organisiere deine Termine – alles an einem Ort.
-              <br className="hidden sm:block" />
-              <span className="text-white/60">Elegant. Effizient. Für Musiker gemacht.</span>
-            </p>
+              <p className="text-[#C0C0C0] max-w-2xl mx-auto mb-10 md:mb-16 text-sm sm:text-base md:text-lg leading-relaxed px-4">
+                Verwalte deine Noten, tracke deine Ziele und organisiere deine Termine – alles an einem Ort.
+                <br className="hidden sm:block" />
+                <span className="text-white/60">Elegant. Effizient. Für Musiker gemacht.</span>
+              </p>
 
-            {/* Button - Registrierung */}
-            <div className="flex items-center justify-center mb-12 md:mb-20 animate-fade-in-up px-4" style={{ animationDelay: "0.5s" }}>
-              <button
-                onClick={() => setAuthModal({ isOpen: true, mode: "register" })}
-                className="group px-8 py-4 md:px-10 md:py-5 bg-white hover:bg-[#E8E8E8] text-black font-bold rounded-xl transition-all hover:scale-105 flex items-center gap-2 md:gap-3 text-base md:text-lg shadow-[0_20px_60px_rgba(255,255,255,0.1)]"
-              >
-                Jetzt Starten
-                <svg className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </button>
+              {/* Button */}
+              <div className="flex items-center justify-center mb-12 md:mb-20 px-4">
+                <button
+                  onClick={() => setAuthModal({ isOpen: true, mode: "register" })}
+                  className="group px-8 py-4 md:px-10 md:py-5 bg-white hover:bg-[#E8E8E8] text-black font-bold rounded-xl transition-all hover:scale-105 flex items-center gap-2 md:gap-3 text-base md:text-lg shadow-[0_20px_60px_rgba(255,255,255,0.1)]"
+                >
+                  Jetzt Starten
+                  <svg className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative z-10 py-32 border-t border-white/5">
+      <section 
+        ref={featuresRef}
+        id="features" 
+        className="relative z-10 py-32 border-t border-white/5"
+      >
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
+          <div className="text-center mb-20 features-title">
             <h2 className="text-5xl md:text-6xl font-bold mb-6">
               <span className="bg-gradient-to-r from-[#FFD700] to-[#D4AF37] bg-clip-text text-transparent">
                 Alles was du brauchst
@@ -333,7 +556,7 @@ export default function HomePage() {
             ].map((feature, i) => (
               <div
                 key={i}
-                className="group p-8 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-xl hover:border-[#FFD700]/30 hover:bg-white/10 transition-all duration-500 hover:scale-105 cursor-pointer"
+                className="feature-card group p-8 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl backdrop-blur-xl hover:border-[#FFD700]/30 hover:bg-white/10 transition-all duration-500 hover:scale-105 cursor-pointer"
               >
                 <div className="w-16 h-16 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-white/15 transition-transform">
                   <feature.icon size={32} className="text-white" />
@@ -349,7 +572,10 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="relative z-10 py-20 border-t border-white/5">
+      <section 
+        ref={statsRef}
+        className="relative z-10 py-20 border-t border-white/5"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -360,7 +586,7 @@ export default function HomePage() {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="text-center p-8 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl hover:border-[#FFD700]/30 transition-all hover:scale-105"
+                className="stat-card text-center p-8 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl hover:border-[#FFD700]/30 transition-all hover:scale-105"
               >
                 <stat.icon size={40} className="text-[#C0C0C0] mx-auto mb-4" />
                 <div className="text-5xl font-bold bg-gradient-to-r from-[#FFD700] to-[#D4AF37] bg-clip-text text-transparent mb-2">
@@ -373,9 +599,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section - Gold Akzent */}
-      <section className="relative z-10 py-32 border-t border-white/5">
-        <div className="max-w-4xl mx-auto px-6 text-center">
+      {/* CTA Section */}
+      <section 
+        ref={ctaRef}
+        className="relative z-10 py-32 border-t border-white/5"
+      >
+        <div className="max-w-4xl mx-auto px-6 text-center cta-content">
           <h2 className="text-5xl md:text-6xl font-bold mb-8 text-white">
             Bereit durchzustarten?
           </h2>
@@ -397,9 +626,13 @@ export default function HomePage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="relative z-10 py-32 border-t border-white/5">
+      <section 
+        ref={contactRef}
+        id="contact" 
+        className="relative z-10 py-32 border-t border-white/5"
+      >
         <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 contact-title">
             <div className="inline-block mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-[1px] bg-gradient-to-r from-transparent to-[#FFD700]" />
@@ -422,7 +655,7 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Contact Info */}
-            <div className="space-y-6">
+            <div className="space-y-6 contact-left">
               <div className="p-6 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-[#FFD700]/20 rounded-2xl hover:border-[#FFD700]/40 transition-all">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center flex-shrink-0">
@@ -474,7 +707,7 @@ export default function HomePage() {
             </div>
 
             {/* Contact Form */}
-            <div className="p-8 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-[#FFD700]/20 rounded-2xl">
+            <div className="p-8 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-[#FFD700]/20 rounded-2xl contact-right">
               <form className="space-y-5" onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
@@ -614,21 +847,6 @@ export default function HomePage() {
           50% { opacity: 0.3; }
         }
 
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes title-appear {
-          0% { opacity: 0; transform: scale(0.9); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-
         .animate-float { animation: float 20s ease-in-out infinite; }
         .animate-float-delayed { animation: float-delayed 25s ease-in-out infinite; }
         .animate-float-slow { animation: float-slow 30s ease-in-out infinite; }
@@ -636,9 +854,6 @@ export default function HomePage() {
         .animate-gradient { animation: gradient 3s linear infinite; }
         .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
-        .animate-fade-in { animation: fade-in 1s ease-out; }
-        .animate-fade-in-up { animation: fade-in-up 1s ease-out; }
-        .animate-title-appear { animation: title-appear 1s ease-out; }
       `}</style>
     </div>
   );
